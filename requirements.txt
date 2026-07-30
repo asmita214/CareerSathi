@@ -6,3 +6,4 @@ groq
 pandas
 huggingface_hub
 python-dotenv
+pdfplumber
