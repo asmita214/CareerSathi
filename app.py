@@ -1,5 +1,6 @@
 import streamlit as st
 from rag_engine import load_index, retrieve, generate_answer
+from resume_analyzer import extract_resume_text, analyze_resume
 
 st.set_page_config(page_title="CareerSaathi", page_icon="💼", layout="wide")
 
@@ -168,6 +169,20 @@ html, body, [class*="css"] { font-family: 'Poppins', sans-serif; }
     box-shadow: 0 6px 18px rgba(43,42,76,0.06);
 }
 
+[data-testid="stFileUploader"] {
+    border-radius: 16px;
+}
+
+[data-baseweb="tab-list"] {
+    gap: 0.5rem;
+}
+[data-baseweb="tab"] {
+    background: rgba(255,255,255,0.6);
+    border-radius: 12px 12px 0 0;
+    font-weight: 600;
+    color: #2B2A4C;
+}
+
 hr { border-color: rgba(43,42,76,0.08) !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -197,9 +212,9 @@ st.markdown("""
         <p>Ask in English or हिंदी — CareerSaathi understands and replies in the same language.</p>
     </div>
     <div class="feature-card">
-        <div class="icon">🔍</div>
-        <h4>Grounded Answers</h4>
-        <p>Every answer is retrieved from real career data, not made up — powered by RAG.</p>
+        <div class="icon">📄</div>
+        <h4>Resume Feedback</h4>
+        <p>Upload your resume and get instant AI-generated feedback tailored to your target role.</p>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -234,34 +249,59 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Built with RAG · FAISS · Sentence-Transformers · Groq")
 
-# ---------------- CHAT ----------------
+# ---------------- STATE ----------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-st.markdown('<div class="section-label">💬 Ask CareerSaathi</div>', unsafe_allow_html=True)
-st.markdown('<div class="chat-card">', unsafe_allow_html=True)
+# ---------------- TABS ----------------
+tab1, tab2 = st.tabs(["💬 Ask CareerSaathi", "📄 Resume Feedback"])
 
-if not st.session_state.messages:
-    st.markdown('<div class="empty-state">👋 Start by picking a career from the sidebar, or type your own question below.</div>', unsafe_allow_html=True)
+# ---------------- TAB 1: CHAT ----------------
+with tab1:
+    st.markdown('<div class="chat-card">', unsafe_allow_html=True)
 
-for msg in st.session_state.messages:
-    avatar = "🧑‍💻" if msg["role"] == "user" else "💼"
-    with st.chat_message(msg["role"], avatar=avatar):
-        st.markdown(msg["content"])
+    if not st.session_state.messages:
+        st.markdown('<div class="empty-state">👋 Start by picking a career from the sidebar, or type your own question below.</div>', unsafe_allow_html=True)
 
-query = st.chat_input("Ask about any career — e.g. 'Product Manager बनने के लिए क्या चाहिए?'")
-if selected_example:
-    query = selected_example
+    for msg in st.session_state.messages:
+        avatar = "🧑‍💻" if msg["role"] == "user" else "💼"
+        with st.chat_message(msg["role"], avatar=avatar):
+            st.markdown(msg["content"])
 
-if query:
-    st.session_state.messages.append({"role": "user", "content": query})
-    with st.chat_message("user", avatar="🧑‍💻"):
-        st.markdown(query)
-    with st.chat_message("assistant", avatar="💼"):
-        with st.spinner("Thinking..."):
-            retrieved = retrieve(query, index, chunks)
-            answer = generate_answer(query, retrieved)
-            st.markdown(answer)
-    st.session_state.messages.append({"role": "assistant", "content": answer})
+    query = st.chat_input("Ask about any career — e.g. 'Product Manager बनने के लिए क्या चाहिए?'")
+    if selected_example:
+        query = selected_example
 
-st.markdown('</div>', unsafe_allow_html=True)
+    if query:
+        st.session_state.messages.append({"role": "user", "content": query})
+        with st.chat_message("user", avatar="🧑‍💻"):
+            st.markdown(query)
+        with st.chat_message("assistant", avatar="💼"):
+            with st.spinner("Thinking..."):
+                retrieved = retrieve(query, index, chunks)
+                answer = generate_answer(query, retrieved)
+                st.markdown(answer)
+        st.session_state.messages.append({"role": "assistant", "content": answer})
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ---------------- TAB 2: RESUME FEEDBACK ----------------
+with tab2:
+    st.markdown('<div class="chat-card">', unsafe_allow_html=True)
+    st.markdown("Upload your resume as a PDF and get instant, AI-generated feedback.")
+
+    target_role = st.text_input("Target role (optional)", placeholder="e.g. Data Scientist, Frontend Developer")
+    uploaded_resume = st.file_uploader("Upload your resume (PDF)", type=["pdf"])
+
+    if uploaded_resume is not None:
+        if st.button("🔍 Analyze Resume"):
+            with st.spinner("Reading and analyzing your resume..."):
+                resume_text = extract_resume_text(uploaded_resume)
+                if len(resume_text.strip()) < 50:
+                    st.error("Couldn't extract enough text from this PDF. Try a different file.")
+                else:
+                    feedback = analyze_resume(resume_text, target_role if target_role else None)
+                    st.markdown("---")
+                    st.markdown(feedback)
+
+    st.markdown('</div>', unsafe_allow_html=True)
