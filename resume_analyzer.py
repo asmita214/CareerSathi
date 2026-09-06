@@ -40,7 +40,7 @@ Give your feedback in this exact format:
 Keep it concise, specific to the actual content of this resume, and actionable."""
 
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.4,
     )

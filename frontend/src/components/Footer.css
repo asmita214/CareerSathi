@@ -1,0 +1,18 @@
+.footer {
+  background: var(--bg2); border-top: 1px solid var(--border);
+  padding: 3rem 2rem 1.5rem;
+}
+.footer-inner {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2rem;
+  margin-bottom: 2rem;
+}
+.footer-brand { display: flex; align-items: center; gap: 0.7rem; }
+.logo-star { font-size: 1.5rem; color: #F08A5D; }
+.footer-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--text); }
+.footer-tag  { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.footer-links { display: flex; gap: 3.5rem; flex-wrap: wrap; }
+.fcol h4 { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 1rem; font-family: 'Inter',sans-serif; }
+.fcol a  { display: block; color: var(--text-muted); font-size: 0.83rem; margin-bottom: 0.5rem; transition: color 0.2s; }
+.fcol a:hover { color: var(--accent); }
+.footer-bottom { max-width: 1280px; margin: 0 auto; font-size: 0.78rem; color: var(--text-dim); border-top: 1px solid var(--border); padding-top: 1.2rem; }
